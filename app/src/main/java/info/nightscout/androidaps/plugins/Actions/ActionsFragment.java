@@ -2,6 +2,8 @@ package info.nightscout.androidaps.plugins.Actions;
 
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -12,9 +14,15 @@ import android.widget.Button;
 
 import com.squareup.otto.Subscribe;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Date;
+
 import info.nightscout.androidaps.Config;
 import info.nightscout.androidaps.MainApp;
 import info.nightscout.androidaps.R;
+import info.nightscout.androidaps.Services.Intents;
 import info.nightscout.androidaps.events.EventInitializationChanged;
 import info.nightscout.androidaps.events.EventRefreshGui;
 import info.nightscout.androidaps.interfaces.FragmentBase;
@@ -23,6 +31,7 @@ import info.nightscout.androidaps.plugins.Careportal.Dialogs.NewNSTreatmentDialo
 import info.nightscout.androidaps.plugins.Careportal.OptionsToShow;
 import info.nightscout.androidaps.plugins.Actions.dialogs.NewExtendedBolusDialog;
 import info.nightscout.androidaps.plugins.Actions.dialogs.NewTempBasalDialog;
+import info.nightscout.utils.DateUtil;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -40,6 +49,7 @@ public class ActionsFragment extends Fragment implements FragmentBase, View.OnCl
     Button extendedBolus;
     Button tempBasal;
     Button fill;
+    Button test;
 
     public ActionsFragment() {
     }
@@ -55,12 +65,14 @@ public class ActionsFragment extends Fragment implements FragmentBase, View.OnCl
         extendedBolus = (Button) view.findViewById(R.id.actions_extendedbolus);
         tempBasal = (Button) view.findViewById(R.id.actions_settempbasal);
         fill = (Button) view.findViewById(R.id.actions_fill);
+        test = (Button) view.findViewById(R.id.actions_test);
 
         profileSwitch.setOnClickListener(this);
         tempTarget.setOnClickListener(this);
         extendedBolus.setOnClickListener(this);
         tempBasal.setOnClickListener(this);
         fill.setOnClickListener(this);
+        test.setOnClickListener(this);
 
         updateGUIIfVisible();
         return view;
@@ -148,6 +160,18 @@ public class ActionsFragment extends Fragment implements FragmentBase, View.OnCl
             case R.id.actions_fill:
                 FillDialog fillDialog = new FillDialog();
                 fillDialog.show(manager, "FillDialog");
+                break;
+            case R.id.actions_test:
+                Context context = MainApp.instance().getApplicationContext();
+                Bundle bundle = new Bundle();
+                bundle.putDouble("mySGV", Math.round(Math.random()*200 + 40));
+                bundle.putString("myTrend", "Flat");
+                bundle.putInt("myBatLvl", 100);
+                bundle.putLong("myTimestamp", new Date().getTime());
+                Intent intent = new Intent(Intents.GLIMP_BG);
+                intent.putExtras(bundle);
+                intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                context.sendBroadcast(intent);
                 break;
         }
     }
